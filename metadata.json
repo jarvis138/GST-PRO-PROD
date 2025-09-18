@@ -1,0 +1,5 @@
+{
+  "name": "GST Calculator Pro",
+  "description": "A sleek and user-friendly GST calculator for small businesses. Easily calculate GST amounts, whether you need to add it to a net price or extract it from a gross price. Supports multiple standard GST rates for quick calculations.",
+  "requestFramePermissions": []
+}
