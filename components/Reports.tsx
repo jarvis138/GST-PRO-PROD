@@ -107,19 +107,19 @@ const Reports: React.FC<ReportsProps> = ({ invoiceHistory, purchaseHistory, prod
                 break;
             case 'salesByClient':
                 head = [['Client Name', 'Invoices', 'Total Sales']];
-                body = Array.from(reportData.salesByClient.values()).map(r => [r.name, r.invoices, formatCurrency(r.total, currencySymbol)]);
+                body = Array.from(reportData.salesByClient.values()).map((r: any) => [r.name, r.invoices, formatCurrency(r.total, currencySymbol)]);
                 break;
             case 'salesByItem':
                 head = [['Item', 'Quantity Sold', 'Total Value']];
-                body = Array.from(reportData.salesByItem.values()).map(r => [r.name, r.quantity, formatCurrency(r.total, currencySymbol)]);
+                body = Array.from(reportData.salesByItem.values()).map((r: any) => [r.name, r.quantity, formatCurrency(r.total, currencySymbol)]);
                 break;
             case 'purchaseByVendor':
                 head = [['Vendor Name', 'Bills', 'Total Purchases']];
-                body = Array.from(reportData.purchaseByVendor.values()).map(r => [r.name, r.bills, formatCurrency(r.total, currencySymbol)]);
+                body = Array.from(reportData.purchaseByVendor.values()).map((r: any) => [r.name, r.bills, formatCurrency(r.total, currencySymbol)]);
                 break;
             case 'purchaseByItem':
                 head = [['Item', 'Quantity Purchased', 'Total Value']];
-                body = Array.from(reportData.purchaseByItem.values()).map(r => [r.name, r.quantity, formatCurrency(r.total, currencySymbol)]);
+                body = Array.from(reportData.purchaseByItem.values()).map((r: any) => [r.name, r.quantity, formatCurrency(r.total, currencySymbol)]);
                 break;
             case 'stockSummary':
                 head = [['Item Name', 'Current Stock', 'Stock Value', 'Status']];
@@ -175,13 +175,13 @@ const Reports: React.FC<ReportsProps> = ({ invoiceHistory, purchaseHistory, prod
                     </table>
                 );
             case 'salesByClient':
-                return <ReportTable headers={['Client Name', 'Invoices', 'Total Sales']} data={Array.from(reportData.salesByClient.values()).map(r => [r.name, r.invoices, formatCurrency(r.total, currencySymbol)])} />;
+                return <ReportTable headers={['Client Name', 'Invoices', 'Total Sales']} data={Array.from(reportData.salesByClient.values()).map((r: any) => [r.name, r.invoices, formatCurrency(r.total, currencySymbol)])} />;
             case 'salesByItem':
-                 return <ReportTable headers={['Item', 'Quantity Sold', 'Total Value']} data={Array.from(reportData.salesByItem.values()).map(r => [r.name, r.quantity, formatCurrency(r.total, currencySymbol)])} />;
+                 return <ReportTable headers={['Item', 'Quantity Sold', 'Total Value']} data={Array.from(reportData.salesByItem.values()).map((r: any) => [r.name, r.quantity, formatCurrency(r.total, currencySymbol)])} />;
             case 'purchaseByVendor':
-                return <ReportTable headers={['Vendor Name', 'Bills', 'Total Purchases']} data={Array.from(reportData.purchaseByVendor.values()).map(r => [r.name, r.bills, formatCurrency(r.total, currencySymbol)])} />;
+                return <ReportTable headers={['Vendor Name', 'Bills', 'Total Purchases']} data={Array.from(reportData.purchaseByVendor.values()).map((r: any) => [r.name, r.bills, formatCurrency(r.total, currencySymbol)])} />;
             case 'purchaseByItem':
-                 return <ReportTable headers={['Item', 'Quantity Purchased', 'Total Value']} data={Array.from(reportData.purchaseByItem.values()).map(r => [r.name, r.quantity, formatCurrency(r.total, currencySymbol)])} />;
+                 return <ReportTable headers={['Item', 'Quantity Purchased', 'Total Value']} data={Array.from(reportData.purchaseByItem.values()).map((r: any) => [r.name, r.quantity, formatCurrency(r.total, currencySymbol)])} />;
             case 'stockSummary':
                  return <ReportTable headers={['Item Name', 'Current Stock', 'Stock Value', 'Status']} data={products.filter(p => p.trackStock).map(p => {
                     let status = "In Stock";
