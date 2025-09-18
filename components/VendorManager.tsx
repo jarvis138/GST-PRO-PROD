@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import type { Vendor } from '../types';
 import Card from './Card';
-import Header from './Header';
 
 interface VendorManagerProps {
     vendors: Vendor[];
@@ -64,11 +63,13 @@ const VendorManager: React.FC<VendorManagerProps> = ({ vendors, setVendors }) =>
 
     return (
         <div className="space-y-6">
-            <Header title="Vendors / Suppliers">
-                 <button onClick={() => handleOpenModal()} className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+            {/* FIX: Replaced the Header component with a div for action buttons to conform to the app layout and fix prop errors. */}
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                <div></div>
+                <button onClick={() => handleOpenModal()} className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                     + Add New Vendor
                 </button>
-            </Header>
+            </div>
 
             <Card>
                 {vendors.length > 0 ? (

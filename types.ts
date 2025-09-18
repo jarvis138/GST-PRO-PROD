@@ -1,5 +1,6 @@
 
-export type View = 'dashboard' | 'sales' | 'inventory' | 'clients' | 'purchases' | 'vendors' | 'reports' | 'gst_filing' | 'recurring_invoices' | 'settings';
+
+export type View = 'dashboard' | 'sales' | 'inventory' | 'clients' | 'purchases' | 'vendors' | 'reports' | 'gst_filing' | 'recurring_invoices' | 'settings' | 'banking';
 
 export enum PriceType {
   EXCLUSIVE = 'EXCLUSIVE',
@@ -32,6 +33,37 @@ export enum ProfileStatus {
     PAUSED = 'PAUSED',
 }
 
+export enum UserRole {
+    ADMIN = 'ADMIN',
+    SALESPERSON = 'SALESPERSON',
+    ACCOUNTANT = 'ACCOUNTANT',
+}
+
+export enum Template {
+    CLASSIC = 'CLASSIC',
+    MODERN = 'MODERN',
+}
+
+export enum TransactionStatus {
+    UNRECONCILED = 'UNRECONCILED',
+    RECONCILED = 'RECONCILED',
+}
+
+export interface BankTransaction {
+    id: string;
+    date: string; // ISO Date String
+    description: string;
+    amount: number;
+    type: 'CREDIT' | 'DEBIT';
+    status: TransactionStatus;
+}
+
+export interface User {
+    id: string;
+    name: string;
+    email: string;
+    role: UserRole;
+}
 
 export interface Item {
   id: string;
@@ -96,9 +128,18 @@ export interface LogisticsDetails {
     ewayBillNumber: string;
 }
 
+export interface CustomField {
+    id: 'customField1' | 'customField2';
+    label: string;
+    enabled: boolean;
+}
+
 export interface Settings {
     razorpayKeyId: string;
     razorpayKeySecret: string;
+    template: Template;
+    accentColor: string;
+    customFields: CustomField[];
 }
 
 export interface InvoiceRecord {
@@ -116,6 +157,9 @@ export interface InvoiceRecord {
     paymentDate?: string; // ISO Date String
     logistics?: LogisticsDetails;
     paymentLink?: string;
+    customFieldValues?: Record<string, string>;
+    reconciliationStatus?: TransactionStatus;
+    reconciledDate?: string;
 }
 
 export interface QuotationRecord {
@@ -129,6 +173,7 @@ export interface QuotationRecord {
     calculationResult: CalculationResult;
     transactionType: TransactionType;
     priceType: PriceType;
+    customFieldValues?: Record<string, string>;
 }
 
 export interface PurchaseItem {
@@ -151,6 +196,8 @@ export interface PurchaseRecord {
     transactionType: TransactionType;
     priceType: PriceType;
     status: PurchaseStatus;
+    reconciliationStatus?: TransactionStatus;
+    reconciledDate?: string;
 }
 
 export interface RecurringProfile {

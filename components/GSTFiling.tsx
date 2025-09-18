@@ -3,7 +3,6 @@ import React, { useState, useMemo } from 'react';
 import type { InvoiceRecord, PurchaseRecord } from '../types';
 import { TransactionType, PriceType } from '../types';
 import Card from './Card';
-import Header from './Header';
 
 interface GSTFilingProps {
     invoiceHistory: InvoiceRecord[];
@@ -125,7 +124,7 @@ const GSTFiling: React.FC<GSTFilingProps> = ({ invoiceHistory, purchaseHistory }
 
     return (
         <div className="space-y-6">
-            <Header title="GST Filing Assistant" />
+            {/* FIX: Removed Header component to use the main app header, fixing prop error. */}
 
             <Card>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 p-4 border-b border-slate-200">

@@ -3,7 +3,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { RecurringProfile, ClientDetails, Product, Item } from '../types';
 import { BillingFrequency, ProfileStatus, PriceType, TransactionType } from '../types';
 import Card from './Card';
-import Header from './Header';
 import { GST_RATES } from '../constants';
 
 interface RecurringManagerProps {
@@ -128,44 +127,73 @@ const RecurringManager: React.FC<RecurringManagerProps> = ({ profiles, setProfil
 
     return (
         <div className="space-y-6">
-            <Header title="Recurring Invoices">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                <div></div>
                  <button onClick={() => handleOpenModal()} className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
                     + New Recurring Profile
                 </button>
-            </Header>
+            </div>
 
             <Card>
                 {profiles.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-slate-200">
-                             <thead className="bg-slate-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Client</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Frequency</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Next Due Date</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Amount</th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Status</th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Actions</th>
-                                </tr>
-                            </thead>
-                             <tbody className="bg-white divide-y divide-slate-200">
-                                {profiles.map(profile => (
-                                    <tr key={profile.id}>
-                                        <td className="px-6 py-4 text-sm font-medium text-slate-900">{profile.client.name}</td>
-                                        <td className="px-6 py-4 text-sm text-slate-500 capitalize">{profile.frequency.toLowerCase()}</td>
-                                        <td className="px-6 py-4 text-sm text-slate-500 text-right">{new Date(profile.nextDueDate).toLocaleDateString('en-IN')}</td>
-                                        <td className="px-6 py-4 text-sm text-slate-500 text-right font-semibold">{currencySymbol}{calculateTotal(profile.items, profile.priceType).toFixed(2)}</td>
-                                        <td className="px-6 py-4 text-sm text-center"><ProfileStatusBadge status={profile.status} /></td>
-                                        <td className="px-6 py-4 text-sm text-center space-x-2">
+                    <>
+                        {/* Desktop Table */}
+                        <div className="overflow-x-auto hidden md:block">
+                            <table className="min-w-full divide-y divide-slate-200">
+                                <thead className="bg-slate-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Client</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Frequency</th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Next Due Date</th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Amount</th>
+                                        <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Status</th>
+                                        <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-slate-200">
+                                    {profiles.map(profile => (
+                                        <tr key={profile.id}>
+                                            <td className="px-6 py-4 text-sm font-medium text-slate-900">{profile.client.name}</td>
+                                            <td className="px-6 py-4 text-sm text-slate-500 capitalize">{profile.frequency.toLowerCase()}</td>
+                                            <td className="px-6 py-4 text-sm text-slate-500 text-right">{new Date(profile.nextDueDate).toLocaleDateString('en-IN')}</td>
+                                            <td className="px-6 py-4 text-sm text-slate-500 text-right font-semibold">{currencySymbol}{calculateTotal(profile.items, profile.priceType).toFixed(2)}</td>
+                                            <td className="px-6 py-4 text-sm text-center"><ProfileStatusBadge status={profile.status} /></td>
+                                            <td className="px-6 py-4 text-sm text-center space-x-2">
+                                                <button onClick={() => handleToggleStatus(profile.id)} className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-100 rounded-full">{profile.status === ProfileStatus.ACTIVE ? <PauseIcon /> : <PlayIcon />}</button>
+                                                <button onClick={() => handleOpenModal(profile)} className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-100 rounded-full"><EditIcon /></button>
+                                                <button onClick={() => handleDelete(profile.id)} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-100 rounded-full"><TrashIcon /></button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* Mobile Card List */}
+                        <div className="md:hidden space-y-4">
+                            {profiles.map(profile => (
+                                <div key={profile.id} className="p-4 border rounded-lg">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="font-bold text-slate-800">{profile.client.name}</p>
+                                            <p className="text-sm text-slate-500 capitalize">{profile.frequency.toLowerCase()} Billing</p>
+                                        </div>
+                                        <ProfileStatusBadge status={profile.status} />
+                                    </div>
+                                    <div className="flex justify-between items-end mt-2">
+                                        <div>
+                                            <p className="text-xs text-slate-500">Next Due: {new Date(profile.nextDueDate).toLocaleDateString('en-IN')}</p>
+                                            <p className="font-semibold text-slate-900">{currencySymbol}{calculateTotal(profile.items, profile.priceType).toFixed(2)}</p>
+                                        </div>
+                                        <div className="flex-shrink-0 space-x-1">
                                             <button onClick={() => handleToggleStatus(profile.id)} className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-100 rounded-full">{profile.status === ProfileStatus.ACTIVE ? <PauseIcon /> : <PlayIcon />}</button>
                                             <button onClick={() => handleOpenModal(profile)} className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-100 rounded-full"><EditIcon /></button>
                                             <button onClick={() => handleDelete(profile.id)} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-100 rounded-full"><TrashIcon /></button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 ) : (
                     <div className="text-center py-12">
                         <p className="text-slate-500">You have no recurring invoice profiles.</p>

@@ -3,7 +3,6 @@ import React, { useState, useMemo } from 'react';
 import type { InvoiceRecord, PurchaseRecord, Product, ClientDetails, Vendor } from '../types';
 import { InvoiceStatus, PurchaseStatus } from '../types';
 import Card from './Card';
-import Header from './Header';
 
 // @ts-ignore
 const { jsPDF } = window.jspdf;
@@ -219,7 +218,7 @@ const Reports: React.FC<ReportsProps> = ({ invoiceHistory, purchaseHistory, prod
 
     return (
         <div className="space-y-6">
-            <Header title="Reports & Analytics" />
+            {/* FIX: Removed Header component to use the main app header, fixing prop error. */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="lg:col-span-1">
                     <Card className="p-4">

@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import type { Product } from '../types';
 import Card from './Card';
-import Header from './Header';
 import { GST_RATES } from '../constants';
 
 interface InventoryManagerProps {
@@ -79,43 +78,69 @@ const InventoryManager: React.FC<InventoryManagerProps> = ({ products, setProduc
 
     return (
         <div className="space-y-6">
-            <Header title="Products & Services">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                 <div></div>
                  <button onClick={() => handleOpenModal()} className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                     + Add New Item
                 </button>
-            </Header>
+            </div>
 
             <Card>
                 {products.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-slate-200">
-                             <thead className="bg-slate-50">
-                                <tr>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Item Name</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">HSN/SAC</th>
-                                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Price</th>
-                                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Stock</th>
-                                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                             <tbody className="bg-white divide-y divide-slate-200">
-                                {products.map(product => (
-                                    <tr key={product.id}>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{product.name}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{product.hsn}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 text-right">{currencySymbol}{(product.price || 0).toFixed(2)}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 text-center">{product.trackStock ? product.stock : 'N/A'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center"><StockStatus product={product} /></td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center space-x-2">
+                    <>
+                        {/* Desktop Table */}
+                        <div className="overflow-x-auto hidden md:block">
+                            <table className="min-w-full divide-y divide-slate-200">
+                                <thead className="bg-slate-50">
+                                    <tr>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Item Name</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">HSN/SAC</th>
+                                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Price</th>
+                                        <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Stock</th>
+                                        <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                                        <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-slate-200">
+                                    {products.map(product => (
+                                        <tr key={product.id}>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{product.name}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{product.hsn}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 text-right">{currencySymbol}{(product.price || 0).toFixed(2)}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 text-center">{product.trackStock ? product.stock : 'N/A'}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-center"><StockStatus product={product} /></td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-center space-x-2">
+                                                <button onClick={() => handleOpenModal(product)} className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-100 rounded-full transition"><EditIcon /></button>
+                                                <button onClick={() => handleDelete(product.id)} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-100 rounded-full transition"><TrashIcon /></button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* Mobile Card List */}
+                        <div className="md:hidden space-y-4">
+                            {products.map(product => (
+                                <div key={product.id} className="p-4 border border-slate-200 rounded-lg">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="font-bold text-slate-800">{product.name}</p>
+                                            <p className="text-sm text-slate-500">HSN: {product.hsn}</p>
+                                        </div>
+                                        <div className="flex-shrink-0 space-x-1">
                                             <button onClick={() => handleOpenModal(product)} className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-100 rounded-full transition"><EditIcon /></button>
                                             <button onClick={() => handleDelete(product.id)} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-100 rounded-full transition"><TrashIcon /></button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-center mt-2">
+                                        <p className="font-semibold text-slate-900">{currencySymbol}{(product.price || 0).toFixed(2)}</p>
+                                        <p className="text-sm text-slate-600">Stock: {product.trackStock ? product.stock : 'N/A'}</p>
+                                        <StockStatus product={product} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 ) : (
                     <div className="text-center py-12">
                         <p className="text-slate-500">Your product and service catalog is empty.</p>

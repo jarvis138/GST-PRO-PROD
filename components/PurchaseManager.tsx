@@ -5,7 +5,6 @@ import { PriceType, TransactionType, PurchaseStatus } from '../types';
 import type { CalculationResult, PurchaseItem, GstBreakdownDetail, Vendor, Product, PurchaseRecord } from '../types';
 import Card from './Card';
 import ResultDisplay from './ResultDisplay';
-import Header from './Header';
 
 const TrashIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -165,8 +164,6 @@ const PurchaseManager: React.FC<PurchaseManagerProps> = ({
     
     return (
         <div className="space-y-6">
-            <Header title="Record Purchase / Expense" />
-
             <Card>
                 <div className="space-y-6">
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -261,7 +258,8 @@ const PurchaseManager: React.FC<PurchaseManagerProps> = ({
              {purchaseHistory.length > 0 && (
                 <Card>
                     <h2 className="text-xl font-bold text-slate-700 mb-4">Recent Purchases</h2>
-                     <div className="overflow-x-auto">
+                    {/* Desktop Table */}
+                    <div className="overflow-x-auto hidden md:block">
                         <table className="min-w-full divide-y divide-slate-200">
                              <thead className="bg-slate-50">
                                 <tr>
@@ -284,6 +282,24 @@ const PurchaseManager: React.FC<PurchaseManagerProps> = ({
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                    {/* Mobile Card List */}
+                    <div className="md:hidden space-y-4">
+                        {purchaseHistory.slice(0, 10).map(rec => (
+                            <div key={rec.id} className="p-4 border rounded-lg">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <p className="font-bold text-slate-800">{rec.vendor.name}</p>
+                                        <p className="text-sm text-indigo-600 font-medium">Bill #{rec.billNumber}</p>
+                                    </div>
+                                    <StatusBadge status={rec.status} />
+                                </div>
+                                <div className="flex justify-between items-end mt-2">
+                                    <p className="text-sm text-slate-500">{new Date(rec.date).toLocaleDateString('en-IN')}</p>
+                                    <p className="font-semibold text-slate-900">{currencySymbol}{rec.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </Card>
             )}

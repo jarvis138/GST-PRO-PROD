@@ -1,8 +1,9 @@
 
+
 import React, { useState, useEffect, useCallback } from 'react';
-import type { View, Item, CalculationResult, BusinessDetails, ClientDetails, InvoiceRecord, QuotationRecord, Product, Vendor, PurchaseRecord, RecurringProfile, Settings } from './types';
+import type { View, Item, CalculationResult, BusinessDetails, ClientDetails, InvoiceRecord, QuotationRecord, Product, Vendor, PurchaseRecord, RecurringProfile, Settings, User, BankTransaction } from './types';
 import { CURRENCIES } from './constants';
-import { PriceType, TransactionType, InvoiceStatus, ProfileStatus, BillingFrequency } from './types';
+import { PriceType, TransactionType, InvoiceStatus, ProfileStatus, BillingFrequency, UserRole, Template } from './types';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import GSTCalculator from './components/GSTCalculator';
@@ -14,9 +15,26 @@ import Reports from './components/Reports';
 import GSTFiling from './components/GSTFiling';
 import RecurringManager from './components/RecurringManager';
 import SettingsComponent from './components/Settings';
+import Banking from './components/Banking';
+import Header from './components/Header';
+
+const VIEW_TITLES: Record<View, string> = {
+    dashboard: 'Dashboard',
+    sales: 'Sales & Invoicing',
+    inventory: 'Products & Services',
+    clients: 'Clients',
+    purchases: 'Purchases & Expenses',
+    vendors: 'Vendors / Suppliers',
+    reports: 'Reports & Analytics',
+    gst_filing: 'GST Filing Assistant',
+    recurring_invoices: 'Recurring Invoices',
+    settings: 'Settings',
+    banking: 'Banking & Reconciliation',
+};
 
 const App: React.FC = () => {
     const [activeView, setActiveView] = useState<View>('dashboard');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
     // Lifted State
     const [items, setItems] = useState<Item[]>([{ id: crypto.randomUUID(), description: '', hsn: '', quantity: 1, price: NaN, gstRate: 18 }]);
@@ -30,7 +48,19 @@ const App: React.FC = () => {
     const [vendors, setVendors] = useState<Vendor[]>([]);
     const [purchaseHistory, setPurchaseHistory] = useState<PurchaseRecord[]>([]);
     const [recurringProfiles, setRecurringProfiles] = useState<RecurringProfile[]>([]);
-    const [settings, setSettings] = useState<Settings>({ razorpayKeyId: '', razorpayKeySecret: '' });
+    const [bankTransactions, setBankTransactions] = useState<BankTransaction[]>([]);
+    const [settings, setSettings] = useState<Settings>({ 
+        razorpayKeyId: '', 
+        razorpayKeySecret: '',
+        template: Template.CLASSIC,
+        accentColor: '#4F46E5', // indigo-600
+        customFields: [
+            { id: 'customField1', label: 'PO Number', enabled: false },
+            { id: 'customField2', label: 'Project Code', enabled: false },
+        ]
+    });
+    const [users, setUsers] = useState<User[]>([]);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
 
 
     // Load data from localStorage on initial render
@@ -63,8 +93,29 @@ const App: React.FC = () => {
         const savedRecurringProfiles = localStorage.getItem('gstCalculatorRecurringProfiles');
         if (savedRecurringProfiles) setRecurringProfiles(JSON.parse(savedRecurringProfiles));
 
+        const savedBankTransactions = localStorage.getItem('gstCalculatorBankTransactions');
+        if (savedBankTransactions) setBankTransactions(JSON.parse(savedBankTransactions));
+
         const savedSettings = localStorage.getItem('gstCalculatorSettings');
-        if (savedSettings) setSettings(JSON.parse(savedSettings));
+        if (savedSettings) {
+            const parsed = JSON.parse(savedSettings);
+            setSettings(prev => ({...prev, ...parsed})); // Merge to gracefully handle new settings
+        }
+
+        // User Management
+        const savedUsers = localStorage.getItem('gstCalculatorUsers');
+        if (savedUsers) {
+            const parsedUsers = JSON.parse(savedUsers);
+            if (parsedUsers.length > 0) {
+                setUsers(parsedUsers);
+                setCurrentUser(parsedUsers[0]); // Default to first user on load
+            }
+        } else {
+            // Create a default admin user if none exist
+            const adminUser: User = { id: crypto.randomUUID(), name: 'Admin User', email: 'admin@example.com', role: UserRole.ADMIN };
+            setUsers([adminUser]);
+            setCurrentUser(adminUser);
+        }
 
     }, []);
 
@@ -78,8 +129,24 @@ const App: React.FC = () => {
     useEffect(() => { localStorage.setItem('gstCalculatorVendors', JSON.stringify(vendors)); }, [vendors]);
     useEffect(() => { localStorage.setItem('gstCalculatorPurchaseHistory', JSON.stringify(purchaseHistory)); }, [purchaseHistory]);
     useEffect(() => { localStorage.setItem('gstCalculatorRecurringProfiles', JSON.stringify(recurringProfiles)); }, [recurringProfiles]);
+    useEffect(() => { localStorage.setItem('gstCalculatorBankTransactions', JSON.stringify(bankTransactions)); }, [bankTransactions]);
     useEffect(() => { localStorage.setItem('gstCalculatorSettings', JSON.stringify(settings)); }, [settings]);
+    useEffect(() => { localStorage.setItem('gstCalculatorUsers', JSON.stringify(users)); }, [users]);
 
+
+    // Role-based view logic
+    const VIEW_PERMISSIONS: Record<UserRole, View[]> = {
+        [UserRole.ADMIN]: ['dashboard', 'sales', 'recurring_invoices', 'purchases', 'inventory', 'clients', 'vendors', 'reports', 'gst_filing', 'settings', 'banking'],
+        [UserRole.SALESPERSON]: ['dashboard', 'sales', 'recurring_invoices', 'clients'],
+        [UserRole.ACCOUNTANT]: ['dashboard', 'sales', 'recurring_invoices', 'purchases', 'reports', 'gst_filing', 'inventory', 'clients', 'vendors', 'banking']
+    };
+
+    // Effect to switch view if current view is not permitted for the new user role
+    useEffect(() => {
+        if (currentUser && !VIEW_PERMISSIONS[currentUser.role].includes(activeView)) {
+            setActiveView('dashboard');
+        }
+    }, [currentUser, activeView]);
 
     // Core logic for generating recurring invoices on app load
     useEffect(() => {
@@ -177,6 +244,14 @@ const App: React.FC = () => {
     }, []); // Run only once on mount
 
     const renderView = () => {
+        if (!currentUser) {
+            return (
+                <div className="flex items-center justify-center h-full">
+                    <p className="text-slate-500">Loading user profile...</p>
+                </div>
+            );
+        }
+        
         const currentCurrency = CURRENCIES.find(c => c.code === currencyCode) || CURRENCIES[0];
         
         switch (activeView) {
@@ -186,6 +261,7 @@ const App: React.FC = () => {
                             purchaseHistory={purchaseHistory}
                             products={products} 
                             currencySymbol={currentCurrency.symbol} 
+                            setActiveView={setActiveView}
                         />;
             case 'sales':
                 return <GSTCalculator 
@@ -225,6 +301,17 @@ const App: React.FC = () => {
                             setPurchaseHistory={setPurchaseHistory}
                             currencySymbol={currentCurrency.symbol}
                         />;
+            case 'banking':
+                return <Banking 
+                            bankTransactions={bankTransactions}
+                            setBankTransactions={setBankTransactions}
+                            invoiceHistory={invoiceHistory}
+                            setInvoiceHistory={setInvoiceHistory}
+                            purchaseHistory={purchaseHistory}
+                            setPurchaseHistory={setPurchaseHistory}
+                            currencySymbol={currentCurrency.symbol}
+                            vendors={vendors}
+                        />;
             case 'inventory':
                 return <InventoryManager products={products} setProducts={setProducts} currencySymbol={currentCurrency.symbol}/>;
             case 'clients':
@@ -248,7 +335,18 @@ const App: React.FC = () => {
             case 'settings':
                 return <SettingsComponent 
                             settings={settings} 
-                            setSettings={setSettings} 
+                            setSettings={setSettings}
+                            clients={savedClients}
+                            setClients={setSavedClients}
+                            vendors={vendors}
+                            setVendors={setVendors}
+                            products={products}
+                            setProducts={setProducts}
+                            invoiceHistory={invoiceHistory}
+                            purchaseHistory={purchaseHistory}
+                            users={users}
+                            setUsers={setUsers}
+                            currentUser={currentUser}
                         />;
             default:
                 return <Dashboard 
@@ -256,18 +354,31 @@ const App: React.FC = () => {
                             purchaseHistory={purchaseHistory}
                             products={products} 
                             currencySymbol={currentCurrency.symbol} 
+                            setActiveView={setActiveView}
                         />;
         }
     };
 
     return (
-        <div className="flex h-screen bg-white font-sans text-slate-800">
-            <Sidebar activeView={activeView} setActiveView={setActiveView} />
-            <main className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-6 sm:p-8">
+        <div className="flex h-screen bg-white font-sans text-slate-800 overflow-hidden">
+            <Sidebar 
+                activeView={activeView} 
+                setActiveView={setActiveView}
+                users={users}
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+                isSidebarOpen={isSidebarOpen}
+                setIsSidebarOpen={setIsSidebarOpen}
+            />
+            <div className="flex-1 flex flex-col overflow-hidden">
+                <Header 
+                    title={VIEW_TITLES[activeView]} 
+                    onMenuClick={() => setIsSidebarOpen(true)}
+                />
+                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-4 sm:p-6 lg:p-8">
                    {renderView()}
-                </div>
-            </main>
+                </main>
+            </div>
         </div>
     );
 };

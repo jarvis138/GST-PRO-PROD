@@ -1,10 +1,17 @@
 
+
 import React from 'react';
-import type { View } from '../types';
+import type { View, User } from '../types';
+import { UserRole } from '../types';
 
 interface SidebarProps {
     activeView: View;
     setActiveView: (view: View) => void;
+    users: User[];
+    currentUser: User | null;
+    setCurrentUser: (user: User) => void;
+    isSidebarOpen: boolean;
+    setIsSidebarOpen: (isOpen: boolean) => void;
 }
 
 const NavLink: React.FC<{
@@ -51,6 +58,11 @@ const PurchasesIcon = () => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
     </svg>
 );
+const BankingIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+    </svg>
+);
 const ItemsIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -67,7 +79,7 @@ const VendorsIcon = () => (
     </svg>
 );
 const ReportsIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
     </svg>
 );
@@ -94,9 +106,20 @@ const LogoIcon = () => (
 );
 
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
-    return (
-        <aside className="w-64 flex-shrink-0 bg-slate-800 flex flex-col">
+const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, users, currentUser, setCurrentUser, isSidebarOpen, setIsSidebarOpen }) => {
+    if (!currentUser) return null;
+
+    const { role } = currentUser;
+
+    const hasPermission = (roles: UserRole[]) => roles.includes(role);
+    
+    const handleNavClick = (view: View) => {
+        setActiveView(view);
+        setIsSidebarOpen(false); // Close sidebar on mobile after navigation
+    }
+
+    const SidebarContent = () => (
+        <div className="flex flex-col flex-grow">
             <div className="h-16 flex items-center justify-center px-4 flex-shrink-0 border-b border-slate-700">
                  <div className="flex items-center space-x-3">
                     <LogoIcon />
@@ -105,83 +128,87 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView }) => {
                     </h1>
                 </div>
             </div>
-            <nav className="flex-1 p-4 space-y-2">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                 <ul>
                     <NavLink
                         icon={<DashboardIcon />}
                         label="Dashboard"
                         isActive={activeView === 'dashboard'}
-                        onClick={() => setActiveView('dashboard')}
+                        onClick={() => handleNavClick('dashboard')}
                     />
                     
                     <li className="pt-4 pb-2 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Operations</li>
                     
-                    <NavLink
-                        icon={<SalesIcon />}
-                        label="Sales"
-                        isActive={activeView === 'sales'}
-                        onClick={() => setActiveView('sales')}
-                    />
-                     <NavLink
-                        icon={<RecurringIcon />}
-                        label="Recurring Invoices"
-                        isActive={activeView === 'recurring_invoices'}
-                        onClick={() => setActiveView('recurring_invoices')}
-                        isSubItem={false}
-                    />
-                    <NavLink
-                        icon={<PurchasesIcon />}
-                        label="Purchases"
-                        isActive={activeView === 'purchases'}
-                        onClick={() => setActiveView('purchases')}
-                    />
+                    {hasPermission([UserRole.ADMIN, UserRole.SALESPERSON, UserRole.ACCOUNTANT]) && (
+                        <>
+                            <NavLink icon={<SalesIcon />} label="Sales" isActive={activeView === 'sales'} onClick={() => handleNavClick('sales')} />
+                            <NavLink icon={<RecurringIcon />} label="Recurring Invoices" isActive={activeView === 'recurring_invoices'} onClick={() => handleNavClick('recurring_invoices')} />
+                        </>
+                    )}
+                    {hasPermission([UserRole.ADMIN, UserRole.ACCOUNTANT]) && (
+                        <NavLink icon={<PurchasesIcon />} label="Purchases" isActive={activeView === 'purchases'} onClick={() => handleNavClick('purchases')} />
+                    )}
+                    {hasPermission([UserRole.ADMIN, UserRole.ACCOUNTANT]) && (
+                        <NavLink icon={<BankingIcon />} label="Banking" isActive={activeView === 'banking'} onClick={() => handleNavClick('banking')} />
+                    )}
                     
-                    <li className="pt-4 pb-2 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Compliance</li>
-                    
-                    <NavLink
-                        icon={<ReportsIcon />}
-                        label="Reports"
-                        isActive={activeView === 'reports'}
-                        onClick={() => setActiveView('reports')}
-                    />
-                     <NavLink
-                        icon={<GstFilingIcon />}
-                        label="GST Filing"
-                        isActive={activeView === 'gst_filing'}
-                        onClick={() => setActiveView('gst_filing')}
-                    />
+                    {hasPermission([UserRole.ADMIN, UserRole.ACCOUNTANT]) && (
+                        <>
+                            <li className="pt-4 pb-2 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Compliance</li>
+                            <NavLink icon={<ReportsIcon />} label="Reports" isActive={activeView === 'reports'} onClick={() => handleNavClick('reports')} />
+                            <NavLink icon={<GstFilingIcon />} label="GST Filing" isActive={activeView === 'gst_filing'} onClick={() => handleNavClick('gst_filing')} />
+                        </>
+                    )}
 
                      <li className="pt-4 pb-2 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Manage</li>
-                    <NavLink
-                        icon={<ItemsIcon />}
-                        label="Items"
-                        isActive={activeView === 'inventory'}
-                        onClick={() => setActiveView('inventory')}
-                    />
-                    <NavLink
-                        icon={<ClientsIcon />}
-                        label="Clients"
-                        isActive={activeView === 'clients'}
-                        onClick={() => setActiveView('clients')}
-                    />
-                     <NavLink
-                        icon={<VendorsIcon />}
-                        label="Vendors"
-                        isActive={activeView === 'vendors'}
-                        onClick={() => setActiveView('vendors')}
-                    />
-                    <NavLink
-                        icon={<SettingsIcon />}
-                        label="Settings"
-                        isActive={activeView === 'settings'}
-                        onClick={() => setActiveView('settings')}
-                    />
+                    {hasPermission([UserRole.ADMIN, UserRole.ACCOUNTANT]) && (
+                        <NavLink icon={<ItemsIcon />} label="Items" isActive={activeView === 'inventory'} onClick={() => handleNavClick('inventory')} />
+                    )}
+                     {hasPermission([UserRole.ADMIN, UserRole.SALESPERSON, UserRole.ACCOUNTANT]) && (
+                        <NavLink icon={<ClientsIcon />} label="Clients" isActive={activeView === 'clients'} onClick={() => handleNavClick('clients')} />
+                     )}
+                     {hasPermission([UserRole.ADMIN, UserRole.ACCOUNTANT]) && (
+                        <NavLink icon={<VendorsIcon />} label="Vendors" isActive={activeView === 'vendors'} onClick={() => handleNavClick('vendors')} />
+                     )}
+                    {hasPermission([UserRole.ADMIN]) && (
+                        <NavLink icon={<SettingsIcon />} label="Settings" isActive={activeView === 'settings'} onClick={() => handleNavClick('settings')} />
+                    )}
                 </ul>
             </nav>
-            <div className="p-4 text-xs text-slate-400 text-center">
-                 © {new Date().getFullYear()} GST Pro
+            <div className="p-4 border-t border-slate-700">
+                <label htmlFor="user-switcher" className="text-xs font-medium text-slate-400 block mb-2">Switch User Profile</label>
+                <select 
+                    id="user-switcher" 
+                    value={currentUser.id} 
+                    onChange={e => {
+                        const selectedUser = users.find(u => u.id === e.target.value);
+                        if (selectedUser) setCurrentUser(selectedUser);
+                    }} 
+                    className="w-full p-2 bg-slate-700 text-white rounded-md border border-slate-600 text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                >
+                    {users.map(user => (
+                        <option key={user.id} value={user.id}>{user.name} ({user.role})</option>
+                    ))}
+                </select>
             </div>
-        </aside>
+        </div>
+    );
+
+    return (
+        <>
+            {/* Mobile Sidebar */}
+            <div className={`fixed inset-0 z-40 lg:hidden transition-opacity ease-linear duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                 <div onClick={() => setIsSidebarOpen(false)} className="absolute inset-0 bg-black bg-opacity-50" aria-hidden="true"></div>
+            </div>
+            <aside className={`fixed top-0 left-0 z-50 w-64 h-full bg-slate-800 flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                <SidebarContent />
+            </aside>
+            
+            {/* Desktop Sidebar */}
+            <aside className="hidden lg:flex lg:flex-shrink-0 w-64 bg-slate-800">
+                <SidebarContent />
+            </aside>
+        </>
     );
 };
 
